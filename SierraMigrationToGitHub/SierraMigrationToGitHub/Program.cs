@@ -15,7 +15,6 @@ namespace SierraMigrationToGitHub
         public static IConfiguration Configuration { get; private set; }
         static async Task Main()
         {
-            //
             var unfuddleOptions = ServiceProvider.GetService<IOptions<UnfuddleConfigSetup>>().Value;
             var githubOptions = ServiceProvider.GetService<IOptions<GithubConfigSetup>>().Value;
             var githubMigration =  GithubMigration.GetGithubMigration(githubOptions, unfuddleOptions);
