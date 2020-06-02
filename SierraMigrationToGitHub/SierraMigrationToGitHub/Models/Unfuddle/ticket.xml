@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- https://unfuddle.com/stack/docs/api/data-models/#ticket/ -->
+<ticket>
+	<assignee-id type="integer"> </assignee-id>
+	<component-id type="integer"> </component-id>
+	<created-at type="datetime"> </created-at>
+	<description> </description>
+	<description-format> [markdown, textile, plain] </description-format>
+	<description-formatted>
+		<!-- only available if formatted=true -->
+	</description-formatted>
+	<due-on type="date"> </due-on>
+	<due-on-formatted> </due-on-formatted>
+	<field1-value-id type="integer"> </field1-value-id>
+	<field2-value-id type="integer"> </field2-value-id>
+	<field3-value-id type="integer"> </field3-value-id>
+	<hours-estimate-current type="float"> </hours-estimate-current>
+	<hours-estimate-initial type="float"> </hours-estimate-initial>
+	<id type="integer"> </id>
+	<milestone-id type="integer"> </milestone-id>
+	<number type="integer"> </number>
+	<priority> [1, 2, 3, 4, 5] </priority>
+	<project-id type="integer"> </project-id>
+	<reporter-id type="integer"> </reporter-id>
+	<resolution> [fixed, works_for_me, postponed, duplicate, will_not_fix, invalid] </resolution>
+	<resolution-description> </resolution-description>
+	<resolution-description-format> [markdown, textile, plain] </resolution-description-format>
+	<resolution-description-formatted>
+		<!-- only available if formatted=true -->
+	</resolution-description-formatted>
+	<severity-id type="integer"> </severity-id>
+	<status> [new, unaccepted, reassigned, reopened, accepted, resolved, closed] </status>
+	<summary> </summary>
+	<updated-at type="datetime"> </updated-at>
+	<version-id type="integer"> </version-id>
+
+	<!--
+  The following are not actual ticket attributes, but when creating or updating
+  a ticket, including any of these three attributes instead of the corresponding
+  <fieldN-value-id> attributes will allow you to create a new value for
+  the ticket field if that field is of the "text" disposition.
+  -->
+	<field1-value> </field1-value>
+	<field2-value> </field2-value>
+	<field3-value> </field3-value>
+
+	<comments type="array">
+		<!-- only available for GET requests if comments=true -->
+		<comment></comment>
+		...
+	</comments>
+
+	<attachments type="array">
+		<!-- only available for GET requests if attachments=true -->
+		<attachment>...</attachment>
+		...
+	</attachments>
+</ticket>
