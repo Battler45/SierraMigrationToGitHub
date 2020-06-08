@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SierraMigrationToGitHub.Models.Unfuddle
 {
@@ -40,6 +41,26 @@ namespace SierraMigrationToGitHub.Models.Unfuddle
         public int count { get; set; }
         public Comment[] comments { get; set; }
         public Attachment[] attachments { get; set; }
+
+        public void AppendToDescriptionAuthor(string author)
+        {
+            //string newLine = Environment.NewLine;
+            description += $"\n Posted by {author}";
+            if (description_formatted != null)
+            description_formatted += $"\n Posted by <b>{author}</b>";
+        }
+
+        public Ticket AddAuthorAnnotationToTicketAndComments(Dictionary<int, Models.Unfuddle.User> people)
+        {
+            if (people == null) return null;
+            if (this.assignee_id.HasValue && people.ContainsKey(this.assignee_id.Value))
+                this.AppendToDescriptionAuthor(GetUserNamesAndLogin(people[this.assignee_id.Value]));
+            foreach (var comment in this.comments)
+                if (people.ContainsKey(comment.author_id))
+                    comment.AppendToBodyAuthor(GetUserNamesAndLogin(people[comment.author_id]));
+            return this;
+            static string GetUserNamesAndLogin(Models.Unfuddle.User user) => $"{user.last_name} {user.first_name}(unfuddle username: {user.username})";
+        }
     }
 
     public class Comment
@@ -53,6 +74,13 @@ namespace SierraMigrationToGitHub.Models.Unfuddle
         public string parent_type { get; set; }
         public DateTime updated_at { get; set; }
         public Attachment[] attachments { get; set; }
+        public void AppendToBodyAuthor(string author)
+        {
+            //string newLine = Environment.NewLine;
+            body += body_format == null 
+                ? $"\n Posted by {author}"
+                : $"\n Posted by <b>{author}</b>";
+        }
     }
 
     public class Attachment

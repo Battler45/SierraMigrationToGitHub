@@ -18,8 +18,9 @@ namespace SierraMigrationToGitHub
             var unfuddleOptions = ServiceProvider.GetService<IOptions<UnfuddleConfigSetup>>().Value;
             var githubOptions = ServiceProvider.GetService<IOptions<GithubConfigSetup>>().Value;
             var githubMigration =  GithubMigration.GetGithubMigration(githubOptions, unfuddleOptions);
-            var succ = await githubMigration.MigrateTicket(115);
-            Console.WriteLine(succ);
+            var tickets = await githubMigration.UnfuddleClient.GetTickets();
+            //var succ = await githubMigration.MigrateTicket(115);
+            Console.WriteLine(tickets.Count);
         }
 
         static Program()

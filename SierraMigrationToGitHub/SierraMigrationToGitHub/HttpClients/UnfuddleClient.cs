@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection.Metadata.Ecma335;
 using System.Web;
+using SierraMigrationToGitHub.Models.Github;
+using System.Linq;
 
 namespace SierraMigrationToGitHub
 {
@@ -19,6 +21,19 @@ namespace SierraMigrationToGitHub
         //public const string ticketUrl = "https://sierra.unfuddle.com/api/v1/projects/1/tickets/";
         private const string UnfuddleProjectApiUrl = "https://sierra.unfuddle.com/api/v1/projects/1/";
         //public const string UnfuddleApiUrl = "https://sierra.unfuddle.com/api/v1";
+        public const string UnfuddlePeopleApiUrl = "https://sierra.unfuddle.com/api/v1/people";
+
+        private Dictionary<int, Models.Unfuddle.User> projectPeople;
+        public async Task<Dictionary<int, Models.Unfuddle.User>> GetProjectPeople()
+        {
+            if (projectPeople != null) return projectPeople;
+            var response = await HttpClient.GetAsync(UnfuddlePeopleApiUrl);
+            if (!response.IsSuccessStatusCode) throw new Exception("");
+            var contentStr = await response.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<Models.Unfuddle.User>>(contentStr);
+            projectPeople = users.ToDictionary(u => u.id, u => u);
+            return projectPeople;
+        }
         private const string FullTicketModelQuery = "comments=true&formatted=true&attachments=true";
         private static UnfuddleClient client;
         public static UnfuddleClient GetClient(UnfuddleConfigSetup unfuddleOptions) => client ??= new UnfuddleClient(unfuddleOptions);
@@ -68,6 +83,19 @@ namespace SierraMigrationToGitHub
                 ticket.resolution_description_formatted = HttpUtility.HtmlDecode(ticket.resolution_description_formatted);
             return ticket;
         }
+        /*
+        public async Task<Ticket> AddAuthorAnnotationToTicketAndComments(Ticket ticket, Dictionary<int, Models.Unfuddle.User> people)
+        {
+            if (people == null) return null;
+            if (ticket.assignee_id.HasValue && people.ContainsKey(ticket.assignee_id.Value))
+                ticket.AppendToDescriptionAuthor(GetUserNamesAndLogin(people[ticket.assignee_id.Value]));
+            foreach (var comment in ticket.comments)
+                if (people.ContainsKey(comment.author_id))
+                    comment.AppendToBodyAuthor(GetUserNamesAndLogin(people[comment.author_id]));
+            return ticket;
+            static string GetUserNamesAndLogin(Models.Unfuddle.User user) => $"{user.last_name} {user.first_name}(unfuddle username: {user.username})";
+        }*/
+
         //?limit=500&page=1
         public async Task<List<Ticket>> GetTicketsPage(int page = 1, int limit = 500)
         {
@@ -75,6 +103,16 @@ namespace SierraMigrationToGitHub
             if (contentStr == null) return null;
             var pageTickets = JsonSerializer.Deserialize<List<Ticket>>(contentStr);
             return pageTickets;
+        }
+        public async Task<List<Ticket>> GetTicketsFromNumber(int beginTicketNumber)
+        {
+            throw new NotImplementedException();
+            /*
+            var contentStr = await GetTicketsPageContent(page, limit);// ?? throw new Exception();
+            if (contentStr == null) return null;
+            var pageTickets = JsonSerializer.Deserialize<List<Ticket>>(contentStr);
+            return pageTickets;
+            */
         }
         public async Task<List<Ticket>> GetTickets()
         {

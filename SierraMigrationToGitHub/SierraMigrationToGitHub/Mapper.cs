@@ -28,7 +28,7 @@ namespace SierraMigrationToGitHub
             //issue.labels ticket.priority ticket.status
             return issue;
         }
-        public static CommentUpsertApiModel ToIssueUpsertModel(Models.Unfuddle.Comment comment)
+        public static CommentUpsertApiModel ToCommentUpsertModel(Models.Unfuddle.Comment comment)
             => new CommentUpsertApiModel 
             {
                 body = comment.body
