@@ -64,6 +64,8 @@ namespace SierraMigrationToGitHub
                 => form.FindElement(By.XPath($".//input[@id='fc-{commentKey}-{commentId}-body']"));
             static void AttachFiles(IWebElement filesInput, List<string> filePathes) 
                 => filePathes.ForEach(filesInput.SendKeys);
+
+            //TODO: 
             static void UploadFiles(ChromeDriver webDriver, IWebElement form)
             {
                 //var updateButton = form.FindElement(By.XPath(".//button[@type='submit' and text() = 'Update comment']"));
@@ -79,6 +81,7 @@ namespace SierraMigrationToGitHub
                 //var wait = new WebDriverWait(webDriver, new TimeSpan(0, 0, 30));
                 //wait.Until(clickableCondition); //.until(elementToBeClickable(myElem));
 
+                /*
                 var wait = new WebDriverWait(webDriver, new TimeSpan(0, 0, 2));
 
                 var updateButtonXPath = By.XPath(".//button[@type='submit' and text() = 'Update comment']");
@@ -91,20 +94,31 @@ namespace SierraMigrationToGitHub
 
                 updateButton.Click();
 
-
-                /*
-                while (!canUploadFiles())
-                    Thread.Sleep(500);//lol spin lock in one thread // lol "semi-spin lock", lool
                 */
+                
+                //while (!canUploadFiles())
+                //    Thread.Sleep(500);//lol spin lock in one thread // lol "semi-spin lock", lool
+                
                 //updateButton.Click();
 
 
-
-
-
+                var updateButtonXPath = By.XPath(".//button[@type='submit' and text() = 'Update comment']");
+                var updateButton = form.FindElement(updateButtonXPath);
+                while (updateButton != null)
+                {
+                    try
+                    {
+                        Thread.Sleep(500);
+                        updateButton.Click();
+                        updateButton = form.FindElement(updateButtonXPath);
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
+                }
             }
         }
-
 
     }
 
