@@ -4,11 +4,15 @@ using Microsoft.Extensions.Options;
 using SierraMigrationToGitHub.HttpClients;
 using SierraMigrationToGitHub.Models.Github;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace SierraMigrationToGitHub
 {
+
     class Program
     {
         private static readonly IServiceProvider ServiceProvider;
@@ -17,12 +21,23 @@ namespace SierraMigrationToGitHub
         {
             var unfuddleOptions = ServiceProvider.GetService<IOptions<UnfuddleConfigSetup>>().Value;
             var githubOptions = ServiceProvider.GetService<IOptions<GithubConfigSetup>>().Value;
-            var githubMigration =  GithubMigration.GetGithubMigration(githubOptions, unfuddleOptions);
-            var tickets = await githubMigration.UnfuddleClient.GetTickets();
+            //var githubMigration =  GithubMigration.GetGithubMigration(githubOptions, unfuddleOptions);
+            //var tickets = await githubMigration.UnfuddleClient.GetTickets();
             //var succ = await githubMigration.MigrateTicket(115);
-            Console.WriteLine(tickets.Count);
-        }
+            //Console.WriteLine(tickets.Count);
+            var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var filePathes = new List<string> 
+            {
+                $"{appPath}\\Files\\work.zip", 
+                $"{appPath}\\Files\\work.txt"
+            };
 
+            var selenium = Selenium.GetSeleniumClient;
+            selenium.SignIn(githubOptions.Account.UserName, githubOptions.Account.Password)
+                .AttachFileToComment("https://github.com/Battler45/SierraMigrationToGitHub/issues/16", filePathes, "632684202", false)
+                .AttachFileToComment("https://github.com/Battler45/SierraMigrationToGitHub/issues/17", filePathes, "640603413", true)
+                ;
+        }
         static Program()
         {
             Configuration = new ConfigurationBuilder()
