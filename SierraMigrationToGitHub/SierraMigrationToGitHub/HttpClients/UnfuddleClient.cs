@@ -19,15 +19,14 @@ namespace SierraMigrationToGitHub
     {
         //public const string currentProject = "sierra";
         //public const string ticketUrl = "https://sierra.unfuddle.com/api/v1/projects/1/tickets/";
-        private const string UnfuddleProjectApiUrl = "https://sierra.unfuddle.com/api/v1/projects/1/";
         //public const string UnfuddleApiUrl = "https://sierra.unfuddle.com/api/v1";
+        private const string UnfuddleProjectApiUrl = "https://sierra.unfuddle.com/api/v1/projects/1/";
         public const string UnfuddlePeopleApiUrl = "https://sierra.unfuddle.com/api/v1/people";
-
         private Dictionary<int, Models.Unfuddle.User> projectPeople;
         public async Task<Dictionary<int, Models.Unfuddle.User>> GetProjectPeople()
         {
             if (projectPeople != null) return projectPeople;
-            var response = await HttpClient.GetAsync(UnfuddlePeopleApiUrl);
+            using var response = await NewHttpClient.GetAsync(UnfuddlePeopleApiUrl);
             if (!response.IsSuccessStatusCode) throw new Exception("");
             var contentStr = await response.Content.ReadAsStringAsync();
             var users = JsonSerializer.Deserialize<List<Models.Unfuddle.User>>(contentStr);
@@ -49,31 +48,46 @@ namespace SierraMigrationToGitHub
                 {
                     BaseAddress = new Uri(UnfuddleProjectApiUrl)
                 };
-                SetupHttpClientHeadersForAuthorizationByBase64();
-                SetupHttpClientHeadersForJSONFormat();
+                SetupHttpClientHeadersForAuthorizationByBase64(_httpClient);
+                SetupHttpClientHeadersForJSONFormat(_httpClient);
                 return _httpClient;
             }
         }
-        private void SetupHttpClientHeadersForXMLFormat()
+        public HttpClient NewHttpClient
         {
-            HttpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/xml"));
+            get
+            {
+                //if (_httpClient != null) return _httpClient;
+                var _httpClient = new HttpClient()
+                {
+                    BaseAddress = new Uri(UnfuddleProjectApiUrl)
+                };
+                SetupHttpClientHeadersForAuthorizationByBase64(_httpClient);
+                SetupHttpClientHeadersForJSONFormat(_httpClient);
+                return _httpClient;
+            }
         }
-        private void SetupHttpClientHeadersForJSONFormat()
+        private void SetupHttpClientHeadersForXMLFormat(HttpClient httpClient)
         {
-            HttpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/xml"));
         }
-        private void SetupHttpClientHeadersForAuthorizationByBase64()
+        private void SetupHttpClientHeadersForJSONFormat(HttpClient httpClient)
+        {
+            httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        }
+        private void SetupHttpClientHeadersForAuthorizationByBase64(HttpClient httpClient)
         {
             var authenticationString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{githubConfigSetup.Account.UserName}:{githubConfigSetup.Account.Password}"));
-            HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authenticationString);
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authenticationString);
         }
         public UnfuddleClient(UnfuddleConfigSetup githubOptions)
             => githubConfigSetup = githubOptions;
         public async Task<Ticket> GetTicket(int tiketId)
         {
-            var response = await HttpClient.GetAsync($"tickets/{tiketId}?{FullTicketModelQuery}");
+            using var httpClient = NewHttpClient;
+            using var response = await httpClient.GetAsync($"tickets/{tiketId}?{FullTicketModelQuery}");
             if (!response.IsSuccessStatusCode) return null;
-            var content = response.Content;
+            using var content = response.Content;
             var contentStr = await content.ReadAsStringAsync();
             var ticket = JsonSerializer.Deserialize<Ticket>(contentStr);
 
@@ -127,16 +141,15 @@ namespace SierraMigrationToGitHub
                 ++page;
             }
         }
-
         private async Task<string> GetTicketsPageContent(int page = 1, int limit = 500)
         {
-            var response = await HttpClient.GetAsync($"tickets?{nameof(limit)}={limit}&{nameof(page)}={page}&{FullTicketModelQuery}");
+            using var httpClient = NewHttpClient;
+            using var response = await HttpClient.GetAsync($"tickets?{nameof(limit)}={limit}&{nameof(page)}={page}&{FullTicketModelQuery}");
             if (!response.IsSuccessStatusCode) return null;
-            var content = response.Content;
+            using var content = response.Content;
             var contentStr = await content.ReadAsStringAsync();
             return contentStr;
         }
-
         private async Task<string> GetTicketsJSON()
         {
             const string JSONEmptyArray = "[]";
@@ -158,5 +171,47 @@ namespace SierraMigrationToGitHub
             var tickets = await GetTicketsJSON();
             await File.WriteAllTextAsync(filePath, tickets);
         }
+
+        //https://sierra.unfuddle.com/api/v1/projects/1/tickets/38/attachments/372/download
+        public async Task<string> DownloadTicketFile(int ticketId, int attacmentId, string fileFolder, string fileName)
+        {
+            try
+            {
+                using var httpClient = NewHttpClient;
+                using var response = await httpClient.GetAsync($"tickets/{ticketId}/attachments/{attacmentId}/download");
+                if (!response.IsSuccessStatusCode) return null;
+                using var contentStream = await response.Content.ReadAsStreamAsync();
+                var filePath = await FileService.SaveFileAsync(fileFolder, fileName, contentStream);
+                return filePath;
+
+            }
+            catch (Exception e)
+            {
+
+                return null;
+            }
+        }
+
+        //api/v1/projects/{id}/tickets/{id}/comments/{id}/attachments/{id}/download[GET]
+        public async Task<string> DownloadCommentFile(int ticketId, int commentId, int attacmentId, string fileFolder, string fileName)
+        {
+
+            try
+            {
+                using var httpClient = NewHttpClient;
+                using var response = await httpClient.GetAsync($"tickets/{ticketId}/comments/{commentId}/attachments/{attacmentId}/download");
+                if (!response.IsSuccessStatusCode) return null;
+                using var contentStream = await response.Content.ReadAsStreamAsync();
+                var filePath = await FileService.SaveFileAsync(fileFolder, fileName, contentStream);
+                return filePath;
+            }
+            catch (Exception e)
+            {
+
+                return null;
+            }
+        }
+        private FileService FileService { get; } = new FileService();
+
     }
 }

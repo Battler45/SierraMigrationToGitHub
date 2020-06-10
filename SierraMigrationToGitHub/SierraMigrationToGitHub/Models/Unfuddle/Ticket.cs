@@ -55,6 +55,7 @@ namespace SierraMigrationToGitHub.Models.Unfuddle
             if (people == null) return null;
             if (this.assignee_id.HasValue && people.ContainsKey(this.assignee_id.Value))
                 this.AppendToDescriptionAuthor(GetUserNamesAndLogin(people[this.assignee_id.Value]));
+            if (this.comments != null)
             foreach (var comment in this.comments)
                 if (people.ContainsKey(comment.author_id))
                     comment.AppendToBodyAuthor(GetUserNamesAndLogin(people[comment.author_id]));

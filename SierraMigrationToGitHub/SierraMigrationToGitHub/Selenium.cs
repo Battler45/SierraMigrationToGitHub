@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace SierraMigrationToGitHub
 {
-    class Selenium
+    public class Selenium
     {
         static public Selenium seleniumClient = null;
         static public Selenium GetSeleniumClient => seleniumClient ??= new Selenium();
@@ -36,10 +36,10 @@ namespace SierraMigrationToGitHub
             return GetSeleniumClient;
         }
 
-        public Selenium AttachFileToComment(string issueUrl, List<string> filePathes, string commentId, bool issueComment)
+        public Selenium AttachFileToComment(string issueUrl, List<string> filePathes, string commentId, bool isFirstIssueComment)
         {
             webDriver.Url = issueUrl;
-            string commentKey = issueComment ? "issuecomment" : "issue";
+            string commentKey = isFirstIssueComment ? "issue" : "issuecomment";
 
             var comment = GetForm(webDriver, commentKey, commentId);
             ShowFilesInput(comment);
@@ -120,6 +120,17 @@ namespace SierraMigrationToGitHub
             }
         }
 
+        public Selenium AttachFileToComment(AttachToGithubTaskModel commentUpdateModel)
+        {
+            return AttachFileToComment(commentUpdateModel.IssueUrl, commentUpdateModel.FilePathes, commentUpdateModel.CommentId, commentUpdateModel.IsFirstIssueComment);
+        }
+        public class AttachToGithubTaskModel
+        {
+            public string IssueUrl { get; set; }
+            public List<string> FilePathes { get; set; }
+            public string CommentId { get; set; } 
+            public bool IsFirstIssueComment { get; set; }
+        }
     }
 
     static public class IWebElementExtensions
